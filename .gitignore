@@ -1,3 +1,4 @@
+jobs.db
 short_test.py
 test_scraper.py
 test_database.py
