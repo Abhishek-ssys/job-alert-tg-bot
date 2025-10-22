@@ -1,12 +1,13 @@
-# Add this at the very top of main.py - BEFORE any other imports
+# Add this at the very top of main.py
 import os
 import sys
 
 # Check if we're running on Railway and setup Selenium path
 if os.getenv('RAILWAY_ENVIRONMENT'):
-    os.environ['PATH'] = f"/usr/bin:{os.environ['PATH']}"
+    os.environ['PATH'] = f"/usr/bin:/usr/local/bin:{os.environ['PATH']}"
+    os.environ['CHROME_PATH'] = "/usr/bin/google-chrome-stable"
 
-# NOW import other modules
+# Rest of your imports...
 import time
 import schedule
 from datetime import datetime
@@ -18,6 +19,7 @@ from db.database import create_table, save_job, get_sent_jobs_count, cleanup_old
 from tg.bot import send_bulk_alerts, send_summary, send_message
 from utils.helpers import log_message
 
+# Rest of your code remains the same...
 def run_job_scraping():
     """Main function to run all scrapers and send alerts"""
     try:
