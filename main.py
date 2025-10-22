@@ -1,3 +1,12 @@
+# Add this at the very top of main.py - BEFORE any other imports
+import os
+import sys
+
+# Check if we're running on Railway and setup Selenium path
+if os.getenv('RAILWAY_ENVIRONMENT'):
+    os.environ['PATH'] = f"/usr/bin:{os.environ['PATH']}"
+
+# NOW import other modules
 import time
 import schedule
 from datetime import datetime
