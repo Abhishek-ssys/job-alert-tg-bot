@@ -1,27 +1,28 @@
 import os
 import sys
-
-# Set Chrome path for Railway
-if os.getenv('RAILWAY_ENVIRONMENT'):
-    os.environ['CHROME_PATH'] = '/usr/bin/google-chrome-stable'
-    os.environ['CHROMEDRIVER_PATH'] = '/usr/local/bin/chromedriver'
-
-# Rest of your imports stay the same
 import time
 import schedule
 from datetime import datetime
 import threading
+
 from config import KEYWORDS, LOCATION, SCRAPING_INTERVAL
-from scraper.naukri_scraper import scrape_naukri_recent_jobs
+
+# Smart scraper selection - try Selenium first, fallback to requests
+try:
+    from scraper.naukri_scraper import scrape_naukri_recent_jobs
+    NAUKRI_SCRAPER = "selenium"
+    print("✅ Using Selenium for Naukri")
+except Exception as e:
+    print(f"⚠️ Selenium failed: {e}")
+    from scraper.naukri_fallback import scrape_naukri_fallback as scrape_naukri_recent_jobs
+    NAUKRI_SCRAPER = "fallback"
+    print("✅ Using fallback for Naukri")
+
 from scraper.linkedin_scraper import scrape_linkedin_recent_jobs
 from db.database import create_table, save_job, get_sent_jobs_count, cleanup_old_jobs, start_daily_cleanup, get_database_size
 from tg.bot import send_bulk_alerts, send_summary, send_message
 from utils.helpers import log_message
 
-# Rest of your code remains exactly the same...
-# Rest of your code remains exactly the same...
-
-# Rest of your code remains the same...
 def run_job_scraping():
     """Main function to run all scrapers and send alerts"""
     try:
@@ -30,20 +31,22 @@ def run_job_scraping():
         all_jobs = []
         new_jobs = []
         
-        # Run scrapers for each keyword (limit to avoid timeout)
+        # Run scrapers for each keyword
         for keyword in KEYWORDS[:3]:
             log_message(f"🔍 Scraping jobs for: {keyword}")
             
             try:
-                # Scrape with recent filtering (last 24 hours)
-                naukri_jobs = scrape_naukri_recent_jobs(keyword, LOCATION, max_hours_old=24)
-                linkedin_jobs = scrape_linkedin_recent_jobs(keyword, LOCATION, max_hours_old=24)
+                # Scrape Naukri (auto-selects best method)
+                naukri_jobs = scrape_naukri_recent_jobs(keyword, LOCATION)
+                
+                # Scrape LinkedIn (always requests-based)
+                linkedin_jobs = scrape_linkedin_recent_jobs(keyword, LOCATION)
                 
                 all_jobs.extend(naukri_jobs)
                 all_jobs.extend(linkedin_jobs)
                 
-                log_message(f"✅ {keyword}: Naukri({len(naukri_jobs)}), LinkedIn({len(linkedin_jobs)})")
-                time.sleep(5)  # Delay between keywords
+                log_message(f"✅ {keyword}: Naukri({len(naukri_jobs)}), LinkedIn({len(linkedin_jobs)}) | Naukri mode: {NAUKRI_SCRAPER}")
+                time.sleep(3)
                 
             except Exception as e:
                 log_message(f"❌ Error scraping {keyword}: {e}")
@@ -54,24 +57,22 @@ def run_job_scraping():
         for job in all_jobs:
             if job['link'] and job['link'] not in seen_links:
                 seen_links.add(job['link'])
-                if save_job(job):  # Only save if it's new
+                if save_job(job):
                     new_jobs.append(job)
         
-        # Send alerts in smaller batches
+        # Send alerts
         total_sent = 0
         if new_jobs:
-            total_sent = send_bulk_alerts(new_jobs[:10])  # Limit to 10 jobs per cycle
+            total_sent = send_bulk_alerts(new_jobs[:8])
         
-        # Send summary with database info
-        db_size_kb = get_database_size() / 1024
+        # Send summary with scraper info
         summary_msg = f"""
-📊 Scraping Cycle Complete
+📊 Scraping Complete
 ⏰ Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 🔍 Total Scanned: {len(all_jobs)}
-🆕 New Jobs Found: {len(new_jobs)}
-📤 Successfully Sent: {total_sent}
-💾 DB Size: {db_size_kb:.1f} KB
-🗃️ Total Jobs in DB: {get_sent_jobs_count()}
+🆕 New Jobs: {len(new_jobs)}
+📤 Sent: {total_sent}
+🔧 Naukri Mode: {NAUKRI_SCRAPER.upper()}
         """
         send_message(summary_msg)
         
