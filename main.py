@@ -1,11 +1,12 @@
 import os
-# Check if we're running on Railway
-if os.getenv('RAILWAY_ENVIRONMENT'):
-    # Let webdriver-manager handle everything
-    os.environ['WDM_LOG_LEVEL'] = '0'  # Disable webdriver-manager logs
-    os.environ['WDM_LOCAL'] = '1'      # Use local cache
+import sys
 
-# Rest of your imports remain exactly the same
+# Set Chrome path for Railway
+if os.getenv('RAILWAY_ENVIRONMENT'):
+    os.environ['CHROME_PATH'] = '/usr/bin/google-chrome-stable'
+    os.environ['CHROMEDRIVER_PATH'] = '/usr/local/bin/chromedriver'
+
+# Rest of your imports stay the same
 import time
 import schedule
 from datetime import datetime
@@ -17,6 +18,7 @@ from db.database import create_table, save_job, get_sent_jobs_count, cleanup_old
 from tg.bot import send_bulk_alerts, send_summary, send_message
 from utils.helpers import log_message
 
+# Rest of your code remains exactly the same...
 # Rest of your code remains exactly the same...
 
 # Rest of your code remains the same...
