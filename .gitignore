@@ -1,0 +1,5 @@
+short_test.py
+test_scraper.py
+test_database.py
+test_telegram.py
+test_config.py
