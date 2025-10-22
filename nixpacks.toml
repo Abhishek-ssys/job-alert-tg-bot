@@ -1,24 +1,8 @@
 [phases.setup]
 cmds = [
     "apt-get update",
-    "apt-get install -y wget unzip curl",
-    
-    # Install Chrome from direct download (most reliable)
-    "wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb",
-    "apt-get install -y ./google-chrome-stable_current_amd64.deb",
-    "rm google-chrome-stable_current_amd64.deb",
-    
-    # Install ChromeDriver - use a specific version that works
-    "wget -q https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip",
-    "unzip -q chromedriver_linux64.zip -d /usr/local/bin/",
-    "chmod +x /usr/local/bin/chromedriver",
-    "rm chromedriver_linux64.zip",
-    
-    # Verify
-    "echo 'Chrome installed:'",
-    "google-chrome --version",
-    "echo 'ChromeDriver installed:'",
-    "chromedriver --version"
+    "apt-get install -y wget",
+    "echo 'WebDriver Manager will handle ChromeDriver automatically'"
 ]
 
 [phases.install]

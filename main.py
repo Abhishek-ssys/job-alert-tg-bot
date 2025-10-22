@@ -1,13 +1,11 @@
-# Add this at the very top of main.py
 import os
-import sys
-
-# Check if we're running on Railway and setup Selenium path
+# Check if we're running on Railway
 if os.getenv('RAILWAY_ENVIRONMENT'):
-    os.environ['PATH'] = f"/usr/bin:/usr/local/bin:{os.environ['PATH']}"
-    os.environ['CHROME_PATH'] = "/usr/bin/google-chrome-stable"
+    # Let webdriver-manager handle everything
+    os.environ['WDM_LOG_LEVEL'] = '0'  # Disable webdriver-manager logs
+    os.environ['WDM_LOCAL'] = '1'      # Use local cache
 
-# Rest of your imports...
+# Rest of your imports remain exactly the same
 import time
 import schedule
 from datetime import datetime
@@ -18,6 +16,8 @@ from scraper.linkedin_scraper import scrape_linkedin_recent_jobs
 from db.database import create_table, save_job, get_sent_jobs_count, cleanup_old_jobs, start_daily_cleanup, get_database_size
 from tg.bot import send_bulk_alerts, send_summary, send_message
 from utils.helpers import log_message
+
+# Rest of your code remains exactly the same...
 
 # Rest of your code remains the same...
 def run_job_scraping():
